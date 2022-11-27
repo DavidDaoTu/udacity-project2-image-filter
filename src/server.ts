@@ -1,6 +1,6 @@
 import express, { response } from 'express';
 import bodyParser from 'body-parser';
-import {filterImageFromURL, deleteLocalFiles} from './util/util';
+import {filterImageFromURL, deleteLocalFiles, getAllFiles} from './util/util';
 
 (async () => {
 
@@ -29,7 +29,8 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   app.get( "/filteredimage", async ( req, res ) => {
 
     let { image_url } = req.query;
-    let ret_msg : string;    
+    let ret_msg: string;
+    let img_files: string[];
 
     try {
       if ( !image_url ) {
@@ -38,7 +39,18 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
       }     
 
       const img_path = await filterImageFromURL(image_url);
-      res.status(200).sendFile(img_path);      
+      res.status(200).sendFile(img_path, null, err => {
+        if (err) {
+          ret_msg = "Failed to send the image file response to client!";
+          throw `${ret_msg}`;
+        } else {
+          img_files = getAllFiles();
+          if (img_files.length) {
+            deleteLocalFiles(img_files);
+          }
+        }
+      });
+
     }
     catch { 
       if ( !ret_msg ) {
@@ -50,6 +62,7 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
       }
       res.send(`${ret_msg}`);
     }
+    
   } );
 
   /**************************************************************************** */
