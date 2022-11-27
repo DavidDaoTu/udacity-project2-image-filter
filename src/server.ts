@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { response } from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
@@ -26,6 +26,28 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   //    image_url: URL of a publicly accessible image
   // RETURNS
   //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
+  app.get( "/filteredimage", async ( req, res ) => {
+
+    let { image_url } = req.query;
+    let ret_msg : string;    
+
+    try {
+      if ( !image_url ) {
+        ret_msg = "img_url is required! Cannot be empty!";
+        throw `${ret_msg}`;
+      }     
+
+      const img_path = await filterImageFromURL(image_url);
+      res.status(200).sendFile(img_path);      
+    }
+    catch { 
+      if ( !ret_msg ) {
+        ret_msg = `Failed to download image from ${image_url}! \
+                    Check the image's accessibility!`;
+      }   
+      res.status(404).send(`${ret_msg}`);
+    }
+  } );
 
   /**************************************************************************** */
 
