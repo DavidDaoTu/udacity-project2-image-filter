@@ -44,8 +44,11 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
       if ( !ret_msg ) {
         ret_msg = `Failed to download image from ${image_url}! \
                     Check the image's accessibility!`;
-      }   
-      res.status(404).send(`${ret_msg}`);
+        res.status(422);
+      } else {
+        res.status(400);
+      }
+      res.send(`${ret_msg}`);
     }
   } );
 
