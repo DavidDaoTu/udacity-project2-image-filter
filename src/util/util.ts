@@ -37,3 +37,11 @@ export async function deleteLocalFiles(files: Array<string>) {
     fs.unlinkSync(file);
   }
 }
+
+// Get all files name
+export function getAllFiles(): string[] {
+  const files_paths: string[] = fs.readdirSync(__dirname + "/tmp").map(file => {
+    return __dirname + "/tmp/" + file;
+  })
+  return files_paths;
+}

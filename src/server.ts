@@ -1,6 +1,6 @@
-import express from 'express';
+import express, { response } from 'express';
 import bodyParser from 'body-parser';
-import {filterImageFromURL, deleteLocalFiles} from './util/util';
+import {filterImageFromURL, deleteLocalFiles, getAllFiles} from './util/util';
 
 (async () => {
 
@@ -26,6 +26,51 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   //    image_url: URL of a publicly accessible image
   // RETURNS
   //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
+  app.get( "/filteredimage", async ( req, res ) => {
+
+    let { image_url } = req.query;
+    let ret_msg: string;
+    let img_files: string[];
+
+    try {
+      // 01. Validate if img_url is not provided
+      if ( !image_url ) {
+        ret_msg = "img_url is required! Cannot be empty!";
+        throw `${ret_msg}`;
+      }     
+
+      // 02. Call filterImgaeFromURL to get image path
+      const img_path = await filterImageFromURL(image_url);
+
+      // 03. Send the result of filtering image to client
+      res.status(200).sendFile(img_path, null, err => {
+        if (err) {
+          // 03-a. If send failed
+          ret_msg = "Failed to send the image file response to client!";
+          throw `${ret_msg}`;
+        } else {
+          // 04. Delete local image files
+          img_files = getAllFiles();
+          if (img_files.length) {
+            deleteLocalFiles(img_files);
+          }
+        }
+      });
+
+    }
+    catch {
+      // 05. Catch any error with proper HTTP return status code
+      if ( !ret_msg ) {
+        ret_msg = `Failed to download image from ${image_url}! \
+                    Check the image's accessibility!`;
+        res.status(422);
+      } else {
+        res.status(400);
+      }
+      res.send(`${ret_msg}`);
+    }
+    
+  } );
 
   /**************************************************************************** */
 
